@@ -6,6 +6,7 @@ import postRoutes from "./routes/posts.js";
 import commentRoutes from "./routes/comments.js";
 import likeRoutes from "./routes/likes.js";
 import relationshipRoutes from "./routes/realtionships.js"
+import storyRouter from "./routes/stories.js"
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import multer from "multer";
@@ -44,6 +45,7 @@ app.post("/api/upload", upload.single("file"),(req,res) =>{
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/posts", postRoutes);
+app.use("/api/stories", storyRouter)
 app.use("/api/comments", commentRoutes);
 app.use("/api/likes", likeRoutes);
 app.use("/api/relationships", relationshipRoutes);

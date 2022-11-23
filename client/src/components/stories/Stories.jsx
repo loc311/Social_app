@@ -1,31 +1,70 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import "./stories.scss";
 import { AuthContext } from "../../context/authContext";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { makeRequest } from "../../axios.js";
 
 const Stories = () => {
 
+  const [file, setFile] = useState();
+
+  const upload = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await makeRequest.post("/upload", formData);
+      return res.data;
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
   const { currentUser } = useContext(AuthContext);
+
+  const queryClient = useQueryClient();
 
   const { isLoading, error, data } = useQuery(["stories"], () =>
     makeRequest.get("/stories").then((res) => {
       return res.data;
     })
   );
-//TODO Add story using react-query mutations and use upload function.
+
+  const mutation = useMutation(
+    (newStory) => {
+      return makeRequest.post("/stories", newStory);
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["stories"]);
+      },
+    }
+  );
+
+  const handleClick = async (e) => {
+    e.preventDefault();
+    let imgUrl = "";
+    if (file) imgUrl = await upload();
+    mutation.mutate({ img: imgUrl });
+  };
+
+
+  //TODO Add story using react-query mutations and use upload function.
   return (
     <div className="stories">
       <div className="story">
-        <img src={"/upload/" + currentUser.profilePic} alt="" />
+        <img
+          src={"/upload/" + currentUser.profilePic}
+          alt=""
+          onChange={(e) => setFile(e.target.files[0])} />
         <span>{currentUser.name}</span>
-        <button>+</button>
+
+        <button onClick={handleClick}>+</button>
       </div>
       {error
         ? "Something went wrong"
         : isLoading
-        ? "loading"
-        : data.map((story) => (
+          ? "loading"
+          : data.map((story) => (
             <div className="story" key={story.id}>
               <img src={story.img} alt="" />
               <span>{story.name}</span>
